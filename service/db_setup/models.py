@@ -36,7 +36,6 @@ class Base(MappedAsDataclass, DeclarativeBase):
 
 class Question(Base):
     __tablename__ = "questions"
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=True)
     active: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
@@ -98,5 +97,3 @@ class TgUpdate(Base):
     __tablename__ = "tg_update"
 
     id = Column(Integer, primary_key=True)
-
-

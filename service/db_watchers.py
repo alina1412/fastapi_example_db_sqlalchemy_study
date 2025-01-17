@@ -32,6 +32,18 @@ class QuestionDb:
         result = await self.session.execute(query)
         return result.lastrowid if result.lastrowid else None
         # logger.info("added %s", result.returned_defaults[0])
+        try:
+            question = Question(**vals)
+            self.session.add(question)
+            await self.session.flush()
+            await self.session.commit()
+            await self.session.refresh(question)
+            logger.info("added question %s", question.id)
+            return question.id
+        except Exception as e:
+            print(f"Error adding question: {e}")
+            await self.session.rollback()
+            return None
 
     async def remove_question(self, id_: int) -> int:
         query = sa.delete(Question).where(*(Question.id == id_,))

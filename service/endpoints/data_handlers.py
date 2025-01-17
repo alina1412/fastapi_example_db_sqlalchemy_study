@@ -81,7 +81,7 @@ async def add_question(
     id_ = await q_manager.add_question(data)
     if id_:
         return {"created": id_}
-    return {"created": False}
+    raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
 
 
 @api_router.put(

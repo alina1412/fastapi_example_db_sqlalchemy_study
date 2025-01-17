@@ -10,7 +10,7 @@ from service.schemas import (
     AnswerSubmitRequest,
     IsCorrectAnsResponse,
     QuestionAddRequest,
-    QuestionEditRequest,
+    # QuestionEditRequest,
     QuestionListRequest,
     QuestionResponseInQuiz,
 )

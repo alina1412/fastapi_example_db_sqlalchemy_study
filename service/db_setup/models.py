@@ -2,14 +2,14 @@ from datetime import datetime
 
 import sqlalchemy as sa
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     ForeignKey,
     Integer,
-    BigInteger,
     String,
-    text as sa_text,
     Text,  # DateTime, TIMESTAMP
+    text as sa_text,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -36,7 +36,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
 
 class Question(Base):
     __tablename__ = "questions"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=True)
     active: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     # answers = relationship("Answer", backref="questions")
@@ -53,10 +53,9 @@ class Question(Base):
 class Answer(Base):
     __tablename__ = "answers"
 
-    id = Column(Integer, primary_key=True)
-    text = Column(String(255), nullable=True)
-    correct = Column(Boolean, default=0)
-    # question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"))
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    text: Mapped[str] = mapped_column(String(255), nullable=True)
+    correct: Mapped[bool] = mapped_column(Boolean, server_default="0")
     question_id: Mapped[int] = mapped_column(
         ForeignKey("questions.id", ondelete="CASCADE")
     )

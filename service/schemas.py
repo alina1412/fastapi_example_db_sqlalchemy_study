@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, RootModel
 
@@ -16,22 +16,14 @@ class QuestionOrderSchema(str, Enum):
 
 
 class QuestionListRequest(BaseModel):
-    question_id: Optional[int] = Field(
-        description="id of a question", default=0
-    )
-    text: Optional[str] = Field(description="search by text", default=None)
-    active: Optional[int] = Field(
-        description="if question is active", default=1
-    )
-    order: Optional[QuestionOrderSchema] = Field(
+    question_id: int | None = Field(description="id of a question", default=0)
+    text: str | None = Field(description="search by text", default=None)
+    active: int | None = Field(description="if question is active", default=1)
+    order: QuestionOrderSchema | None = Field(
         description="order of results", default="id"
     )
-    offset: Optional[int] = Field(
-        description="offset to show on page", default=0
-    )
-    limit: Optional[int] = Field(
-        description="limit to show on page", default=50
-    )
+    offset: int | None = Field(description="offset to show on page", default=0)
+    limit: int | None = Field(description="limit to show on page", default=50)
 
     class Config:
         json_schema_extra = {
@@ -47,17 +39,13 @@ class QuestionListRequest(BaseModel):
 
 
 class QuestionGetOneRequest(BaseModel):
-    question_id: Optional[int] = Field(
-        description="id of a question", default=0
-    )
+    question_id: int | None = Field(description="id of a question", default=0)
     tg_id: int = Field(description="tg_id of a player")
 
 
 class QuestionAddRequest(BaseModel):
     text: str = Field(description="text", min_length=1, max_length=255)
-    active: Optional[int] = Field(
-        description="if question is active", default=1
-    )
+    active: int | None = Field(description="if question is active", default=1)
 
     class Config:
         json_schema_extra = {
@@ -70,10 +58,10 @@ class QuestionAddRequest(BaseModel):
 
 class QuestionEditRequest(BaseModel):
     id: int = Field(description="id of a question")
-    text: Optional[str] = Field(
+    text: str | None = Field(
         description="text", min_length=1, max_length=255, default=None
     )
-    active: Optional[int] = Field(
+    active: int | None = Field(
         description="if question is active", default=None
     )
 
@@ -108,11 +96,11 @@ class QuizListResponse(BaseModel):
     id: int = Field(description="id of a question")
     text: str = Field(description="text")
     active: int = Field(description="if question is active")
-    answers: List[Any]
+    answers: list[Any]
 
 
 class AnswerRequest(BaseModel):
-    id: Optional[int] = Field(description="id of an answer", default=None)
+    id: int | None = Field(description="id of an answer", default=None)
     text: str = Field(description="text", min_length=1, max_length=50)
     correct: bool = Field(description="if answer is correct")
     question_id: int = Field(description="id of a question")
@@ -143,7 +131,7 @@ class AnswerAddRequest(BaseModel):
 
 class AnswerSubmitRequest(BaseModel):
     question_id: int = Field(description="id of a question")
-    answer_ids: List[int] = Field(
+    answer_ids: list[int] = Field(
         default_factory=list, min_length=0
     )  # AnswersList
 
@@ -191,7 +179,7 @@ class AnswerInResponse(BaseModel):
 
 class IsCorrectAnsResponse(BaseModel):
     correct: bool
-    answers: List[AnswerInResponse]
+    answers: list[AnswerInResponse]
 
 
 class ScoreResponse(BaseModel):
@@ -206,11 +194,11 @@ class QuestionResponseInQuiz(BaseModel):
     id: int
     text: str
     active: int
-    answers: List[AnswerInResponse]
+    answers: list[AnswerInResponse]
 
 
 class QuizResponse(RootModel):
-    root: Dict[int, QuestionResponseInQuiz]
+    root: dict[int, QuestionResponseInQuiz]
 
 
 class DeleteResponse(BaseModel):

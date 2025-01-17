@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +28,7 @@ api_router = APIRouter(
 
 @api_router.get(
     "/show-quiz",
-    response_model=Optional[QuizResponse],
+    response_model=QuizResponse,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
@@ -111,12 +109,12 @@ async def edit_question(
     },
 )
 async def delete_question(
-    id: int,
+    id_: int,
     session: AsyncSession = Depends(get_session),
 ):
     """Request for delete_question."""
     q_manager = QuestionsManager(session)
-    res = await q_manager.remove_question(id)
+    res = await q_manager.remove_question(id_)
     return {"deleted_rows": res}
 
 

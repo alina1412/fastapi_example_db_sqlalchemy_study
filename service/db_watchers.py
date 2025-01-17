@@ -1,6 +1,6 @@
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import insert as ps_insert
 from sqlalchemy.dialects.mysql import insert as mysql_insert
+from sqlalchemy.dialects.postgresql import insert as ps_insert
 
 # from sqlalchemy import select, update, or_, delete
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload  # , lazyload, load_only
 from sqlalchemy.sql.expression import false, true
 
-from service.config import logger, db_settings
+from service.config import db_settings, logger
 from service.db_setup.models import (
     Answer,
     Player,
@@ -28,10 +28,6 @@ class QuestionDb:
         self.session = session
 
     async def add_question(self, vals) -> int | None:
-        query = sa.insert(Question).values(**vals)
-        result = await self.session.execute(query)
-        return result.lastrowid if result.lastrowid else None
-        # logger.info("added %s", result.returned_defaults[0])
         try:
             question = Question(**vals)
             self.session.add(question)
@@ -40,14 +36,15 @@ class QuestionDb:
             await self.session.refresh(question)
             logger.info("added question %s", question.id)
             return question.id
-        except Exception as e:
-            print(f"Error adding question: {e}")
+        except Exception as exc:
+            logger.error("Error adding question: ", exc_info=exc)
             await self.session.rollback()
             return None
 
     async def remove_question(self, id_: int) -> int:
-        query = sa.delete(Question).where(*(Question.id == id_,))
+        query = sa.delete(Question).filter(Question.id == id_)
         result = await self.session.execute(query)
+        await self.session.commit()
         return result.rowcount
 
     async def edit_question_by_id(
@@ -56,24 +53,14 @@ class QuestionDb:
         vals = {k: v for k, v in vals.items() if v is not None}
         if not vals:
             return None
-        query = (
-            sa.update(Question)
-            .where(Question.id == id_)
-            .values(**vals)
-            .returning(Question)
-        )
-        elem = (await self.session.execute(query)).scalar_one_or_none()
-        return (
-            QuestionDto(
-                id=elem.id,
-                text=elem.text,
-                active=elem.active,
-                answers=[],
-                updated_dt=elem.updated_dt,
-            )
-            if elem
-            else None
-        )
+        query_result = await self.session.get(Question, id_)
+        if not query_result:
+            return None
+        for key, value in vals.items():
+            if value is not None:
+                setattr(query_result, key, value)
+        await self.session.flush()
+        return query_result
 
     async def find_correct_answers(self, question_id: int) -> list[AnswerDto]:
         query = sa.select(Answer).where(
@@ -116,7 +103,7 @@ class QuestionDb:
             "updated_dt": Question.updated_dt.desc(),
             "active": Question.active.desc(),
         }
-        order = orders[data["order"]] if data["order"] in orders else None
+        order = orders[data["order"]] if (data["order"] in orders) else None
 
         query = (
             sa.select(Question)
@@ -190,9 +177,18 @@ class AnswerDb:
         self.session = session
 
     async def add_answer(self, vals) -> int | None:
-        query = sa.insert(Answer).values(**vals)
-        result = await self.session.execute(query)
-        return result.lastrowid if result.lastrowid else None
+        try:
+            answer = Answer(**vals)
+            self.session.add(answer)
+            await self.session.flush()
+            await self.session.commit()
+            await self.session.refresh(answer)
+            logger.info("added answer %s", answer.id)
+            return answer.id
+        except Exception as exc:
+            logger.error("Error adding answer: ", exc_info=exc)
+            await self.session.rollback()
+            return None
 
     async def remove_answer(self, id_: int) -> int:
         query = sa.delete(Answer).where(Answer.id == id_)
@@ -297,8 +293,7 @@ class UserDb:
     async def delete(self, session, id_):
         query = sa.delete(self.model).where(*(User.id == id_,))
         result = await session.execute(query)
-        # result.rowcount
-        return
+        return result.rowcount
 
 
 class GameDb:
@@ -308,7 +303,7 @@ class GameDb:
         self.session = session
 
     async def create_new_rounds(self, user_tg_id: int, amount: int = 5) -> None:
-        """To Round model -> question_id, user_tg_id"""
+        """To Round model -> question_id, user_tg_id."""
         sub_query_choice = (
             sa.select(Question.id, sa.cast(user_tg_id, sa.Integer))
             .order_by(sa.func.random())
@@ -368,20 +363,22 @@ class GameDb:
         if "postgresql" in db_settings["db_driver"]:
             query = (
                 ps_insert(Player)
-                .values(**{"tg_id": user_tg_id})
+                .values(tg_id=user_tg_id)
                 .on_conflict_do_nothing()
                 .returning(Player.id)
             )
         else:
             query = (
                 mysql_insert(Player)
-                .values(**{"tg_id": user_tg_id})
+                .values(tg_id=user_tg_id)
                 .prefix_with("IGNORE")
                 # .returning(Player.id)
             )
             # result = await self.session.execute(query)
             # if result.rowcount:
-            #     inserted_id = (await self.session.execute(sa.text("SELECT LAST_INSERT_ID()"))).scalar()
+            #     inserted_id = (await self.session.execute(
+            #           sa.text("SELECT LAST_INSERT_ID()"))
+            #                   ).scalar()
             #     return inserted_id
         result = await self.session.execute(query)
         return result.lastrowid if result.lastrowid else None

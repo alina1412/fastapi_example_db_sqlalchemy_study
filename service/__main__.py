@@ -1,13 +1,13 @@
+import asyncio
 from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI
-import asyncio
+
+from service.config import logger
 from service.endpoints.data_handlers import api_router as data_routes
 from service.endpoints.game_handlers import api_router as game_routes
 from service.endpoints.tg_handlers import api_router as tg_routes
-
-
-from service.config import logger
 
 
 class BackgroundTask:

@@ -6,8 +6,8 @@ import pytz
 from dotenv import load_dotenv
 
 load_dotenv()
-key = environ.get("key")
-assert key
+KEY = environ.get("KEY")
+assert KEY
 
 db_settings = {
     "db_name": environ.get("DB_NAME"),
@@ -20,7 +20,7 @@ db_settings = {
 
 
 def utcnow() -> datetime:
-    """datetime object with timezone awareness"""
+    """Datetime object with timezone awareness."""
     now: datetime = datetime.datetime.now(tz=pytz.utc)
     return now
 

@@ -1,5 +1,5 @@
+import enum
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field, RootModel
@@ -9,7 +9,7 @@ class UserInput(BaseModel):
     username: str
 
 
-class QuestionOrderSchema(str, Enum):
+class QuestionOrderSchema(enum.StrEnum):
     id = "id"
     active = "active"
     updated_dt = "updated_dt"

@@ -8,6 +8,7 @@ from service.errors import AnswerNotAddedError
 from service.schemas import (
     AnswerAddRequest,
     AnswerAddResponse,
+    AnswerResponse,
     AnswerSubmitRequest,
     DeleteResponse,
     IsCorrectAnsResponse,
@@ -56,7 +57,7 @@ async def show_quiz(
 async def get_questions(
     data: QuestionListRequest, session: AsyncSession = Depends(get_session)
 ) -> list[QuestionResponse]:
-    """Get_questions"""
+    """Get_questions."""
     q_manager = QuestionsManager(session)
     questions = await q_manager.get_questions(data)
     return questions if questions else []
@@ -180,3 +181,21 @@ async def delete_answer(
     a_manager = AnswersManager(session)
     res = await a_manager.remove_answer(id)
     return {"deleted_rows": res}
+
+
+@api_router.get(
+    "/get-answer",
+    response_model=AnswerResponse | None,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
+    },
+)
+async def get_answer(
+    id_: int,
+    session: AsyncSession = Depends(get_session),
+):
+    """Request for get_answer."""
+    a_manager = AnswersManager(session)
+    res = await a_manager.get_answer_by_id(id_)
+    return res

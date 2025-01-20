@@ -14,16 +14,11 @@ from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     MappedAsDataclass,
-    # declarative_base,
     mapped_column,
     relationship,
 )
 
 from service.config import utcnow
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
@@ -33,15 +28,13 @@ class Base(MappedAsDataclass, DeclarativeBase):
 
 
 class Question(Base):
-    __tablename__ = "questions"
+    __tablename__ = "question"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=True)
     active: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-
     answers = relationship("Answer", back_populates="question")
-    # answers = relationship("Answer", backref="questions")
-    # answers: Mapped[List["Answer"]] = relationship()
+
     updated_dt: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True),
         default_factory=utcnow,
@@ -51,19 +44,19 @@ class Question(Base):
 
 
 class Answer(Base):
-    __tablename__ = "answers"
+    __tablename__ = "answer"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     text: Mapped[str] = mapped_column(String(255), nullable=True)
     correct: Mapped[bool] = mapped_column(Boolean, server_default="0")
     question_id: Mapped[int] = mapped_column(
-        ForeignKey("questions.id", ondelete="CASCADE")
+        ForeignKey("question.id", ondelete="CASCADE")
     )
     question = relationship("Question", back_populates="answers")
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     username: Mapped[str] = mapped_column(
@@ -76,7 +69,7 @@ class User(Base):
 
 
 class Player(Base):
-    __tablename__ = "players"
+    __tablename__ = "player"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
@@ -86,15 +79,15 @@ class Player(Base):
 
 
 class Rounds(Base):
-    __tablename__ = "rounds"
+    __tablename__ = "round"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     asked: Mapped[bool] = mapped_column(Boolean, server_default="False")
     question_id: Mapped[int] = mapped_column(
-        ForeignKey("questions.id", ondelete="CASCADE")
+        ForeignKey("question.id", ondelete="CASCADE")
     )
     player_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("players.tg_id", ondelete="CASCADE")
+        BigInteger, ForeignKey("player.tg_id", ondelete="CASCADE")
     )
 
 

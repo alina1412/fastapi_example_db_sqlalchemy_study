@@ -18,7 +18,6 @@ from service.schemas import (
     AnswerSubmitRequest,
     IsCorrectAnsResponse,
     QuestionAddRequest,
-    # QuestionEditRequest,
     QuestionListRequest,
     QuestionResponseInQuiz,
 )
@@ -37,8 +36,8 @@ class QuestionsManager:
     async def remove_question(self, id_: int):
         return await QuestionDb(self.session).remove_question(id_)
 
-    async def edit_question_by_id(self, vals: dict) -> int:
-        id_ = vals.pop("id")
+    async def edit_question_by_id(self, id_: int, vals: dict) -> int:
+        # id_ = vals.pop("id")
         res = await QuestionDb(self.session).edit_question_by_id(id_, vals)
         return res.id if res else None
 

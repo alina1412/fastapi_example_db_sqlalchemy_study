@@ -10,7 +10,6 @@ from service.schemas import (
     AnswerAddResponse,
     AnswerResponse,
     AnswerSubmitRequest,
-    DeleteResponse,
     IsCorrectAnsResponse,
     QuestionAddRequest,
     QuestionAddResponse,
@@ -64,7 +63,7 @@ async def get_questions(
 
 
 @api_router.post(
-    "/add-question",
+    "/question",
     status_code=status.HTTP_201_CREATED,
     response_model=QuestionAddResponse,
     responses={
@@ -83,29 +82,33 @@ async def add_question(
     raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
 
 
-@api_router.put(
-    "/edit-question",
+@api_router.patch(
+    "/question/{id_}",
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
     },
 )
 async def edit_question(
+    id_: int,
     params=Depends(QuestionEditRequest),
     session: AsyncSession = Depends(get_session),
 ):
-    """Request for edit_question."""
+    """Request for edit_question. Patch - changes
+    only provided fields.
+    """
     q_manager = QuestionsManager(session)
     edit_question_data = params.model_dump()
-    res = await q_manager.edit_question_by_id(edit_question_data)
+    res = await q_manager.edit_question_by_id(id_, edit_question_data)
     return {"edited": res}
 
 
 @api_router.delete(
-    "/delete-question",
-    response_model=DeleteResponse,
+    "/question/{id_}",
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        status.HTTP_404_NOT_FOUND: {"description": "Not found"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
     },
 )
@@ -116,11 +119,12 @@ async def delete_question(
     """Request for delete_question."""
     q_manager = QuestionsManager(session)
     res = await q_manager.remove_question(id_)
-    return {"deleted_rows": res}
+    if not res:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
 
 
 @api_router.post(
-    "/add-answer",
+    "/answer",
     response_model=AnswerAddResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -166,21 +170,23 @@ async def submit_answer(
 
 
 @api_router.delete(
-    "/delete-answer",
-    response_model=DeleteResponse,
+    "/answer/{id_}",
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
+        status.HTTP_404_NOT_FOUND: {"description": "Not found"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
     },
 )
 async def delete_answer(
-    id: int,
+    id_: int,
     session: AsyncSession = Depends(get_session),
 ):
     """Request for delete_answer."""
     a_manager = AnswersManager(session)
-    res = await a_manager.remove_answer(id)
-    return {"deleted_rows": res}
+    res = await a_manager.remove_answer(id_)
+    if not res:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
 
 
 @api_router.get(

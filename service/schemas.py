@@ -9,7 +9,7 @@ class UserInput(BaseModel):
     username: str
 
 
-class QuestionOrderSchema(enum.StrEnum):
+class QuestionOrderSchema(str, enum.Enum):  # enum.StrEnum for 3.11
     id = "id"
     active = "active"
     updated_dt = "updated_dt"
@@ -57,7 +57,7 @@ class QuestionAddRequest(BaseModel):
 
 
 class QuestionEditRequest(BaseModel):
-    id: int = Field(description="id of a question")
+    # id: int = Field(description="id of a question")
     text: str | None = Field(
         description="text", min_length=1, max_length=255, default=None
     )
@@ -199,17 +199,6 @@ class QuestionResponseInQuiz(BaseModel):
 
 class QuizResponse(RootModel):
     root: dict[int, QuestionResponseInQuiz]
-
-
-class DeleteResponse(BaseModel):
-    deleted_rows: int = Field(description="number of deleted rows")
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "deleted_rows": 1,
-            }
-        }
 
 
 class AnswerAddResponse(BaseModel):

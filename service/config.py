@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 KEY = environ.get("KEY")
 assert KEY
+DEBUG = environ.get("DEBUG", None)
 
 db_settings = {
     "db_name": environ.get("DB_NAME"),
@@ -26,10 +27,10 @@ def utcnow() -> datetime:
 
 
 logging.basicConfig(
-    filename="logs.log",
+    filename=("logs.log" if DEBUG else None),
     level=logging.WARNING,
     format="""[%(asctime)s] {%(filename)s:%(lineno)d} 
                         %(levelname)s - %(message)s""",
-    datefmt="%H:%M:%S",  # datefmt='%Y-%m-%d %H:%M:%S',
+    datefmt=("%H:%M:%S" if DEBUG else "%Y-%m-%d %H:%M:%S"),
 )
 logger = logging.getLogger(__name__)

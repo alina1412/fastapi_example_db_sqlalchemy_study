@@ -9,7 +9,7 @@ from service.endpoints.data_handlers import api_router as data_routes
 from service.endpoints.game_handlers import api_router as game_routes
 from service.endpoints.tg_handlers import api_router as tg_routes
 
-
+"""
 class BackgroundTask:
     async def long_running_task(self):
         await asyncio.sleep(10)
@@ -30,7 +30,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
+"""
+app = FastAPI()
 
 list_of_routes = [data_routes, tg_routes, game_routes]
 for route in list_of_routes:

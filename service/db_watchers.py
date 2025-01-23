@@ -35,12 +35,12 @@ class QuestionDb:
             await self.session.flush()
             await self.session.commit()
             await self.session.refresh(question)
-            logger.info("added question %s", question.id)
-            return question.id
         except Exception as exc:
             logger.error("Error adding question: ", exc_info=exc)
             await self.session.rollback()
             return None
+        logger.info("added question %s", question.id)
+        return question.id
 
     async def remove_question(self, id_: int) -> int:
         query = sa.delete(Question).filter(Question.id == id_)
@@ -87,7 +87,7 @@ class QuestionDb:
             "updated_dt": Question.updated_dt.desc(),
             "active": Question.active.desc(),
         }
-        order = orders[data["order"]] if (data["order"] in orders) else None
+        order = orders.get(data["order"], None)
 
         query = (
             sa.select(Question)
@@ -137,12 +137,12 @@ class AnswerDb:
             await self.session.flush()
             await self.session.commit()
             await self.session.refresh(answer)
-            logger.info("added answer %s", answer.id)
-            return answer.id
         except Exception as exc:
             logger.error("Error adding answer: ", exc_info=exc)
             await self.session.rollback()
             return None
+        logger.info("added answer %s", answer.id)
+        return answer.id
 
     async def remove_answer(self, id_: int) -> int:
         query = sa.delete(Answer).where(Answer.id == id_)
@@ -163,7 +163,7 @@ class TgDb:
         self.session = session
 
     async def update_tg_id(self, id_: int):
-        query = sa.update(TgUpdate).values(**{"id": id_})
+        query = sa.update(TgUpdate).values(id=id_)
         await self.session.execute(query)
 
     async def get_last_tg_id(self):

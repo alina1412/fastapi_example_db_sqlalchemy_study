@@ -101,7 +101,7 @@ async def edit_player_score(
 
 
 @api_router.post(
-    "/add-player",
+    "/player",
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Bad request"},
@@ -139,7 +139,6 @@ async def player_score(
 
 @api_router.put(
     "/mark-answered",
-    # response_model=QuestionIdResponse,
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Not found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},

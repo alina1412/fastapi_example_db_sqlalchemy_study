@@ -9,7 +9,7 @@ class UserInput(BaseModel):
     username: str
 
 
-class QuestionOrderSchema(str, enum.Enum):  # enum.StrEnum for 3.11
+class QuestionOrderSchema(str, enum.Enum):  # noqa: UP042 enum.StrEnum for 3.11
     id = "id"
     active = "active"
     updated_dt = "updated_dt"

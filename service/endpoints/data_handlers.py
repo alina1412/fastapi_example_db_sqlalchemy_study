@@ -27,7 +27,7 @@ api_router = APIRouter(
 
 
 @api_router.get(
-    "/show-quiz",
+    "/quiz",
     response_model=QuizResponse,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},
@@ -36,7 +36,7 @@ api_router = APIRouter(
 )
 async def show_quiz(
     params: QuestionListRequest = Depends(),
-    session: AsyncSession = Depends(get_session),  # type: ignore
+    session: AsyncSession = Depends(get_session),
 ):
     """Show quiz-test page."""
     data = QuestionListRequest(**params.__dict__)
@@ -45,7 +45,7 @@ async def show_quiz(
     return questions if questions else {}
 
 
-@api_router.post(
+@api_router.get(
     "/questions",
     response_model=list[QuestionResponse],
     responses={
@@ -54,7 +54,8 @@ async def show_quiz(
     },
 )
 async def get_questions(
-    data: QuestionListRequest, session: AsyncSession = Depends(get_session)
+    data=Depends(QuestionListRequest),
+    session: AsyncSession = Depends(get_session),
 ) -> list[QuestionResponse]:
     """Get_questions."""
     q_manager = QuestionsManager(session)
@@ -190,7 +191,7 @@ async def delete_answer(
 
 
 @api_router.get(
-    "/get-answer",
+    "/answer/{id_}",
     response_model=AnswerResponse | None,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Bad request"},

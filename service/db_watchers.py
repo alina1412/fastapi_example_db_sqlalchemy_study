@@ -19,7 +19,7 @@ from service.db_setup.models import (
     TgUpdate,
     User,
 )
-from service.schemas import QuestionListRequest
+from service.schemas import QuestionAddRequest, QuestionListRequest
 
 
 class QuestionDb:
@@ -28,7 +28,8 @@ class QuestionDb:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def add_question(self, vals) -> int | None:
+    async def add_question(self, data: QuestionAddRequest) -> int | None:
+        vals = data.model_dump()
         try:
             question = Question(**vals)
             self.session.add(question)
@@ -65,7 +66,7 @@ class QuestionDb:
 
     async def find_correct_answers(self, question_id: int) -> Sequence[Answer]:
         query = sa.select(Answer).where(
-            (Answer.question_id == question_id) & (Answer.correct == True)
+            (Answer.question_id == question_id) & (Answer.correct == true())
         )
         result = await self.session.execute(query)
         return result.scalars().all()
@@ -162,11 +163,11 @@ class TgDb:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def update_tg_id(self, id_: int):
+    async def update_tg_id(self, id_: int) -> None:
         query = sa.update(TgUpdate).values(id=id_)
         await self.session.execute(query)
 
-    async def get_last_tg_id(self):
+    async def get_last_tg_id(self) -> int | None:
         query = sa.select(TgUpdate.id).limit(1)
         res = (await self.session.execute(query)).scalar_one_or_none()
         return res
@@ -178,8 +179,7 @@ class UserDb:
     def __init__(self, model) -> None:
         self.model = model
 
-    async def select_all(self, session):
-        conds = (1 == 1,)
+    async def select_all(self, session, conds=(True,)):
         query = sa.select(self.model).where(*conds)
         result = await session.execute(query)
         res = result.scalars().all()
@@ -190,7 +190,10 @@ class UserDb:
         vals = {"username": username, "password": password}
         if "postgresql" in db_settings["db_driver"]:
             query = (
-                ps_insert(self.model).values(**vals).on_conflict_do_nothing()
+                ps_insert(self.model)
+                .values(**vals)
+                .on_conflict_do_nothing()
+                .returning(self.model.id)
             )
         else:
             query = (
@@ -198,6 +201,8 @@ class UserDb:
             )
 
         result = await session.execute(query)
+        if "postgresql" in db_settings["db_driver"]:
+            return result.returned_defaults[0]
         return result.lastrowid if result.lastrowid else None
 
     async def update(self, session):
@@ -209,15 +214,10 @@ class UserDb:
                 User.password.is_(None),
             ),
         )
-        # {self.model.active.key: self.model.active or data["active"]}
-        if not conds:
-            conds = (1 == 1,)  # conds = (User.id == 103,)
-        query = (
-            sa.update(self.model)
-            .where(*conds)
-            .values(**vals)
-            .returning(self.model.id)
-        )
+        query = sa.update(self.model).values(**vals).returning(self.model.id)
+        if conds:
+            query = query.where(*conds)
+
         result = list(await session.execute(query))
         return result
 
@@ -304,15 +304,10 @@ class GameDb:
                 mysql_insert(Player)
                 .values(tg_id=user_tg_id)
                 .prefix_with("IGNORE")
-                # .returning(Player.id)
             )
-            # result = await self.session.execute(query)
-            # if result.rowcount:
-            #     inserted_id = (await self.session.execute(
-            #           sa.text("SELECT LAST_INSERT_ID()"))
-            #                   ).scalar()
-            #     return inserted_id
         result = await self.session.execute(query)
+        if "postgresql" in db_settings["db_driver"]:
+            return result.returned_defaults[0]
         return result.lastrowid if result.lastrowid else None
 
     async def get_score_of_player(self, user_tg_id: int) -> int | None:

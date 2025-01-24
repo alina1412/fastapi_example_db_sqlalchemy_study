@@ -30,8 +30,7 @@ class QuestionsManager:
         self.session = session
 
     async def add_question(self, data: QuestionAddRequest):
-        vals = data.model_dump()
-        return await QuestionDb(self.session).add_question(vals)
+        return await QuestionDb(self.session).add_question(data)
 
     async def remove_question(self, id_: int):
         return await QuestionDb(self.session).remove_question(id_)

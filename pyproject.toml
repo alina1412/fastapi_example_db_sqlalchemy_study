@@ -103,6 +103,7 @@ extend-ignore = [
     "D205",     # https://docs.astral.sh/ruff/rules/blank-line-after-summary
     "D415",     # https://docs.astral.sh/ruff/rules/ends-in-punctuation
     "D400",
+    "D211", "D213", "D203",
     "D401",
     "RET504",
     "B008",

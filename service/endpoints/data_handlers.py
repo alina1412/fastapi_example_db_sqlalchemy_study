@@ -39,9 +39,8 @@ async def show_quiz(
     session: AsyncSession = Depends(get_session),
 ):
     """Show quiz-test page."""
-    data = QuestionListRequest(**params.__dict__)
     q_manager = QuestionsManager(session)
-    questions = await q_manager.get_questions_with_answers(data)
+    questions = await q_manager.get_questions_with_answers(params)
     return questions if questions else {}
 
 
